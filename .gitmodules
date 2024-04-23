@@ -1,3 +1,6 @@
 [submodule "data/flan-norwegian"]
 	path = data/flan-norwegian
 	url = https://huggingface.co/datasets/Lauler/flan-norwegian
+[submodule "data/flan-swedish"]
+	path = data/flan-swedish
+	url = https://huggingface.co/datasets/Lauler/flan-swedish
