@@ -1,6 +1,7 @@
 import argparse
 import jsonlines
 from sentence_transformers import SentenceTransformer, util
+from tqdm import tqdm
 
 def calculate_semantic_distance(input_file, output_file, model_name='sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2'):
     # Load the model
@@ -8,7 +9,8 @@ def calculate_semantic_distance(input_file, output_file, model_name='sentence-tr
     
     # Open the input and output jsonlines files
     with jsonlines.open(input_file, mode='r') as reader, jsonlines.open(output_file, mode='w') as writer:
-        for obj in reader:
+        # Process each record with tqdm for visual progress feedback
+        for obj in tqdm(reader, desc="Processing records"):
             # Handle inputs and inputs_backtranslation
             if 'inputs' in obj and 'inputs_backtranslation' in obj:
                 text1 = obj['inputs']
@@ -28,7 +30,7 @@ def calculate_semantic_distance(input_file, output_file, model_name='sentence-tr
                 cosine_sim = util.pytorch_cos_sim(embeddings1, embeddings2)
                 semantic_distance = 1 - cosine_sim.item()
                 obj['targets_semdist'] = semantic_distance
-            
+
             # Write the modified object to the output file
             writer.write(obj)
 
