@@ -143,7 +143,8 @@ def main():
                 batch_nr += 1
             if not args.nostats:
                 # Print normalised weights
-                print_stats(weights / np.max(weights))
+                print_stats(weights/100)
+                #print_stats(weights / np.max(weights))
 
 if __name__ == "__main__":
     main()
