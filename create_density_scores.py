@@ -57,16 +57,19 @@ class L2Hash:
         h /= self.r
         return np.floor(h)
 
-def print_stats(scores):
-    counts, bins = np.histogram(scores, bins=100, range=(0, 1))
+def print_stats(scores, num_bins=10):
+    counts, bins = np.histogram(scores, bins=num_bins, range=(0, 1))
     total = counts.sum()
     print("\nProbability Distribution Bar Chart:")
     for count, bin_edge in zip(counts, bins):
-        print(f"{bin_edge:.2f} - {bin_edge + 0.01:.2f} | {'#' * int(50 * count / total)} ({count})")
+        bin_width = 1 / num_bins
+        print(f"{bin_edge:.2f} - {bin_edge + bin_width:.2f} | {'#' * int(50 * count / total)} ({count})")
     print("\nStatistics Table:")
     print("Range\t\t\tCount\tPercentage")
     for count, bin_edge in zip(counts, bins):
-        print(f"{bin_edge:.2f} - {bin_edge + 0.01:.2f}\t{count}\t{count / total * 100:.2f}%")
+        bin_width = 1 / num_bins
+        print(f"{bin_edge:.2f} - {bin_edge + bin_width:.2f}\t{count}\t{count / total * 100:.2f}%")
+
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Calculate inverse propensity scores via KDE using locality sensitive hashing.")
@@ -139,7 +142,8 @@ def main():
                 results[offset_batch:offset_batch + args.batch_size] = weights
                 batch_nr += 1
             if not args.nostats:
-                print_stats(scores)
+                # Print normalised weights
+                print_stats(weights / np.max(weights))
 
 if __name__ == "__main__":
     main()
