@@ -25,6 +25,7 @@ def process_memmap_files(input_dir, output_dir, emb_size, local):
                 num_embeddings = embeddings.shape[0] // emb_size
                 embeddings = embeddings[:num_embeddings * emb_size].reshape((num_embeddings, emb_size))
                 all_embeddings.append(embeddings)
+                print(f"Input shape for {filename}: {embeddings.shape}")
 
         # Concatenate embeddings from all files
         all_embeddings = np.concatenate(all_embeddings, axis=0)
@@ -42,8 +43,9 @@ def process_memmap_files(input_dir, output_dir, emb_size, local):
                 end_index = start_index + num_embeddings
                 normalized_file_embeddings = normalized_embeddings[start_index:end_index]
                 output_file_path = os.path.join(output_dir, filename)
-                np.save(output_file_path, normalized_file_embeddings)
-                print(f"Processed and saved normalized embeddings for {filename}. Shape: {normalized_file_embeddings.shape}")
+                output_memmap = np.memmap(output_file_path, dtype='float32', mode='w+', shape=(num_embeddings, emb_size))
+                output_memmap[:] = normalized_file_embeddings
+                print(f"Processed and saved normalized embeddings for {filename}. Shape: {output_memmap.shape}")
                 start_index = end_index
     else:
         # Local normalization within each file
@@ -54,17 +56,19 @@ def process_memmap_files(input_dir, output_dir, emb_size, local):
 
                 # Load embeddings as a memmap file
                 embeddings = np.memmap(file_path, dtype='float32', mode='r')
+                print(f"Input shape for {filename}: {embeddings.shape}")
 
                 # Reshape the loaded embeddings
                 num_embeddings = embeddings.shape[0] // emb_size
-                embeddings = embeddings[:num_embeddings * emb_size].reshape((num_embeddings, emb_size))
+                embeddings_2d = embeddings[:num_embeddings * emb_size].reshape((num_embeddings, emb_size))
 
                 # Normalize the embeddings
-                normalized_embeddings = normalize_embeddings(embeddings)
+                normalized_embeddings = normalize_embeddings(embeddings_2d)
 
-                # Save the normalized embeddings as a new file
-                np.save(output_file_path, normalized_embeddings)
-                print(f"Processed and saved normalized embeddings for {filename}. Shape: {normalized_embeddings.shape}")
+                # Save the normalized embeddings as a new memmap file with the same shape as input
+                output_memmap = np.memmap(output_file_path, dtype='float32', mode='w+', shape=(num_embeddings, emb_size))
+                output_memmap[:] = normalized_embeddings
+                print(f"Processed and saved normalized embeddings for {filename}. Shape: {output_memmap.shape}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Normalize embeddings stored in numpy memmap format.")
